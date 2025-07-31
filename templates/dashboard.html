@@ -33,6 +33,7 @@
           <th>Quota</th>
           <th>Used</th>
           <th>Customer ID</th>
+          <th>Manage</th>
         </tr>
       </thead>
       <tbody>
@@ -43,6 +44,12 @@
           <td>{{ key["quota"] }}</td>
           <td>{{ key["used"] }}</td>
           <td>{{ key["customer_id"] }}</td>
+          <td>
+            <form action="/create_customer_portal_session" method="post">
+              <input type="hidden" name="email" value="{{ key['email'] }}">
+              <button type="submit">Manage</button>
+            </form>
+          </td>
         </tr>
         {% endfor %}
       </tbody>
