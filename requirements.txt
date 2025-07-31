@@ -10,6 +10,7 @@ confection==0.1.5
 cymem==2.0.11
 en_core_web_sm @ https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.8.0/en_core_web_sm-3.8.0-py3-none-any.whl#sha256=1932429db727d4bff3deed6b34cfc05df17794f4a52eeb26cf8928f7c1a0fb85
 fastapi==0.116.1
+fastapi-utils==0.8.0
 h11==0.16.0
 idna==3.10
 itsdangerous==2.2.0
@@ -24,6 +25,7 @@ murmurhash==1.0.13
 numpy==2.3.2
 packaging==25.0
 preshed==3.0.10
+psutil==5.9.8
 pydantic==2.11.7
 pydantic_core==2.33.2
 Pygments==2.19.2
