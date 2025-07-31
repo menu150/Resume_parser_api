@@ -1,0 +1,50 @@
+Jul 31 13:21:57 Praetor uvicorn[232810]:     return callback(*args, **kwargs)
+Jul 31 13:21:57 Praetor uvicorn[232810]:            ^^^^^^^^^^^^^^^^^^^^^^^^^
+Jul 31 13:21:57 Praetor uvicorn[232810]:   File "/home/menu150/resume_parser_api/venv/lib/python3.12/site-packages/uvicorn/main.py", line 413, in main
+Jul 31 13:21:57 Praetor uvicorn[232810]:     run(
+Jul 31 13:21:57 Praetor uvicorn[232810]:   File "/home/menu150/resume_parser_api/venv/lib/python3.12/site-packages/uvicorn/main.py", line 580, in run
+Jul 31 13:21:57 Praetor uvicorn[232810]:     server.run()
+Jul 31 13:21:57 Praetor uvicorn[232810]:   File "/home/menu150/resume_parser_api/venv/lib/python3.12/site-packages/uvicorn/server.py", line 67, in run
+Jul 31 13:21:57 Praetor uvicorn[232810]:     return asyncio.run(self.serve(sockets=sockets))
+Jul 31 13:21:57 Praetor uvicorn[232810]:            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Jul 31 13:21:57 Praetor uvicorn[232810]:   File "/usr/lib/python3.12/asyncio/runners.py", line 194, in run
+Jul 31 13:21:57 Praetor uvicorn[232810]:     return runner.run(main)
+Jul 31 13:21:57 Praetor uvicorn[232810]:            ^^^^^^^^^^^^^^^^
+Jul 31 13:21:57 Praetor uvicorn[232810]:   File "/usr/lib/python3.12/asyncio/runners.py", line 118, in run
+Jul 31 13:21:57 Praetor uvicorn[232810]:     return self._loop.run_until_complete(task)
+Jul 31 13:21:57 Praetor uvicorn[232810]:            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Jul 31 13:21:57 Praetor uvicorn[232810]:   File "/usr/lib/python3.12/asyncio/base_events.py", line 687, in run_until_complete
+Jul 31 13:21:57 Praetor uvicorn[232810]:     return future.result()
+Jul 31 13:21:57 Praetor uvicorn[232810]:            ^^^^^^^^^^^^^^^
+Jul 31 13:21:57 Praetor uvicorn[232810]:   File "/home/menu150/resume_parser_api/venv/lib/python3.12/site-packages/uvicorn/server.py", line 71, in serve
+Jul 31 13:21:57 Praetor uvicorn[232810]:     await self._serve(sockets)
+Jul 31 13:21:57 Praetor uvicorn[232810]:   File "/home/menu150/resume_parser_api/venv/lib/python3.12/site-packages/uvicorn/server.py", line 78, in _serve
+Jul 31 13:21:57 Praetor uvicorn[232810]:     config.load()
+Jul 31 13:21:57 Praetor uvicorn[232810]:   File "/home/menu150/resume_parser_api/venv/lib/python3.12/site-packages/uvicorn/config.py", line 436, in load
+Jul 31 13:21:57 Praetor uvicorn[232810]:     self.loaded_app = import_from_string(self.app)
+Jul 31 13:21:57 Praetor uvicorn[232810]:                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Jul 31 13:21:57 Praetor uvicorn[232810]:   File "/home/menu150/resume_parser_api/venv/lib/python3.12/site-packages/uvicorn/importer.py", line 22, in import_from_string
+Jul 31 13:21:57 Praetor uvicorn[232810]:     raise exc from None
+Jul 31 13:21:57 Praetor uvicorn[232810]:   File "/home/menu150/resume_parser_api/venv/lib/python3.12/site-packages/uvicorn/importer.py", line 19, in import_from_string
+Jul 31 13:21:57 Praetor uvicorn[232810]:     module = importlib.import_module(module_str)
+Jul 31 13:21:57 Praetor uvicorn[232810]:              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Jul 31 13:21:57 Praetor uvicorn[232810]:   File "/usr/lib/python3.12/importlib/__init__.py", line 90, in import_module
+Jul 31 13:21:57 Praetor uvicorn[232810]:     return _bootstrap._gcd_import(name[level:], package, level)
+Jul 31 13:21:57 Praetor uvicorn[232810]:            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Jul 31 13:21:57 Praetor uvicorn[232810]:   File "<frozen importlib._bootstrap>", line 1387, in _gcd_import
+Jul 31 13:21:57 Praetor uvicorn[232810]:   File "<frozen importlib._bootstrap>", line 1360, in _find_and_load
+Jul 31 13:21:57 Praetor uvicorn[232810]:   File "<frozen importlib._bootstrap>", line 1331, in _find_and_load_unlocked
+Jul 31 13:21:57 Praetor uvicorn[232810]:   File "<frozen importlib._bootstrap>", line 935, in _load_unlocked
+Jul 31 13:21:57 Praetor uvicorn[232810]:   File "<frozen importlib._bootstrap_external>", line 995, in exec_module
+Jul 31 13:21:57 Praetor uvicorn[232810]:   File "<frozen importlib._bootstrap>", line 488, in _call_with_frames_removed
+Jul 31 13:21:57 Praetor uvicorn[232810]:   File "/home/menu150/resume_parser_api/main.py", line 5, in <module>
+Jul 31 13:21:57 Praetor uvicorn[232810]:     from starlette.middleware.sessions import SessionMiddleware
+Jul 31 13:21:57 Praetor uvicorn[232810]:   File "/home/menu150/resume_parser_api/venv/lib/python3.12/site-packages/starlette/middleware/sessions.py", line 7, in <module>
+Jul 31 13:21:57 Praetor uvicorn[232810]:     import itsdangerous
+Jul 31 13:21:57 Praetor uvicorn[232810]: ModuleNotFoundError: No module named 'itsdangerous'
+Jul 31 13:21:57 Praetor systemd[1]: resumeparser.service: Main process exited, code=exited, status=1/FAILURE
+Jul 31 13:21:57 Praetor systemd[1]: resumeparser.service: Failed with result 'exit-code'.
+Jul 31 13:21:58 Praetor systemd[1]: resumeparser.service: Scheduled restart job, restart counter is at 5.
+Jul 31 13:21:58 Praetor systemd[1]: resumeparser.service: Start request repeated too quickly.
+Jul 31 13:21:58 Praetor systemd[1]: resumeparser.service: Failed with result 'exit-code'.
+Jul 31 13:21:58 Praetor systemd[1]: Failed to start resumeparser.service - Resume Parser API.
