@@ -61,6 +61,26 @@ async def create_checkout_session(plan: str = Form(...)):
     )
     return RedirectResponse(session.url, status_code=303)
 
+# Customer portal session
+@app.post("/create_customer_portal_session")
+async def create_customer_portal_session(email: str = Form(...)):
+    with sqlite3.connect(DB_PATH) as conn:
+        cursor = conn.cursor()
+        cursor.execute("SELECT customer_id FROM api_keys WHERE email = ? LIMIT 1", (email,))
+        row = cursor.fetchone()
+
+    if not row:
+        return JSONResponse({"error": "Customer not found"}, status_code=404)
+
+    try:
+        portal_session = stripe.billing_portal.Session.create(
+            customer=row[0],
+            return_url="http://localhost:8000/dashboard"
+        )
+        return RedirectResponse(portal_session.url, status_code=303)
+    except Exception as e:
+        return JSONResponse({"error": str(e)}, status_code=500)
+
 # Dashboard
 @app.get("/dashboard", response_class=HTMLResponse)
 async def dashboard(request: Request):
