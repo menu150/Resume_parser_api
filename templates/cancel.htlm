@@ -1,0 +1,9 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"><title>Payment Canceled</title></head>
+<body>
+  <h1>❌ Subscription Canceled</h1>
+  <p>You canceled the checkout process. No charges were made.</p>
+  <a href="/dashboard">Return to Dashboard</a>
+</body>
+</html>

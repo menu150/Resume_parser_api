@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Pricing | ResumeParse API</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <div class="navbar">
+    <div><strong>ResumeParse</strong></div>
+    <div>
+      <a href="/docs">API Docs</a>
+      <a href="/login_customer">Login</a>
+    </div>
+  </div>
+
+  <h1>Pricing</h1>
+
+  <div class="card">
+    <h2>🟣 Basic Plan</h2>
+    <p><strong>$9 / month</strong></p>
+    <ul>
+      <li>100 resumes per month</li>
+      <li>Email support</li>
+    </ul>
+    <form method="POST" action="/create_checkout_session">
+      <input type="hidden" name="price_id" value="{{ basic_price_id }}">
+      <button type="submit">Subscribe to Basic</button>
+    </form>
+  </div>
+
+  <div class="card">
+    <h2 class="btn-gold">🟡 Pro Plan</h2>
+    <p><strong>$29 / month</strong></p>
+    <ul>
+      <li>1,000 resumes per month</li>
+      <li>Priority support</li>
+    </ul>
+    <form method="POST" action="/create_checkout_session">
+      <input type="hidden" name="price_id" value="{{ pro_price_id }}">
+      <button type="submit" class="btn-gold">Subscribe to Pro</button>
+    </form>
+  </div>
+</body>
+</html>

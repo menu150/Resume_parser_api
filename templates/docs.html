@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>API Documentation | ResumeParse</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <div class="navbar">
+    <div><strong>ResumeParse</strong></div>
+    <div>
+      <a href="/pricing">Pricing</a>
+      <a href="/login_customer">Login</a>
+    </div>
+  </div>
+
+  <h1>API Documentation</h1>
+
+  <div class="card">
+    <h2>🔑 Authentication</h2>
+    <p>Pass your API key in the <code>X-API-Key</code> header:</p>
+    <pre><code>curl -H "X-API-Key: YOUR_KEY" https://your-domain.com/parse_resume</code></pre>
+  </div>
+
+  <div class="card">
+    <h2>📄 POST /parse_resume</h2>
+    <p>Upload a PDF resume and receive structured JSON:</p>
+    <pre><code>curl -X POST -H "X-API-Key: YOUR_KEY" -F "file=@resume.pdf" https://your-domain.com/parse_resume</code></pre>
+  </div>
+
+  <div class="card">
+    <h2>📊 GET /usage</h2>
+    <p>Check how many resumes you've parsed and your quota:</p>
+    <pre><code>curl -H "X-API-Key: YOUR_KEY" https://your-domain.com/usage</code></pre>
+  </div>
+
+  <div class="card">
+    <h2>📈 Quota Policy</h2>
+    <p>
+      Your quota resets monthly based on your subscription. If you hit 90%, you'll receive an email alert. You can manage your subscription anytime through the dashboard.
+    </p>
+  </div>
+</body>
+</html>

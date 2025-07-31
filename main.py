@@ -122,3 +122,4 @@ async def checkout_success(request: Request):
 @app.get("/cancel", response_class=HTMLResponse)
 async def checkout_cancel(request: Request):
     return templates.TemplateResponse("cancel.html", {"request": request})
+from tasks import check_quota_alerts

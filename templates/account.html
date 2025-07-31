@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<link rel="stylesheet" href="/static/style.css">
+<head>
+  <meta charset="UTF-8">
+  <title>Your ResumeParse Account</title>
+  <style>
+    body { font-family: sans-serif; margin: 2rem; }
+    .card { border: 1px solid #ccc; padding: 1rem; max-width: 600px; margin-bottom: 2rem; }
+    button { margin-top: 1rem; padding: 0.5rem 1rem; }
+    form { display: inline-block; margin-right: 1rem; }
+  </style>
+</head>
+<body>
+  <h1>Your ResumeParse Account</h1>
+  <p><a href="/logout_customer">Logout</a></p>
+
+  {% if key %}
+  <div class="card">
+    <h2>API Key</h2>
+    <p><strong>Key:</strong> {{ key["key"] }}</p>
+    <p><strong>Quota:</strong> {{ key["quota"] }}</p>
+    <p><strong>Used:</strong> {{ key["used"] }}</p>
+
+    <form method="post" action="/regenerate_key">
+      <button type="submit">Regenerate Key</button>
+    </form>
+
+    <form method="post" action="/customer_portal">
+      <button type="submit">Manage Billing</button>
+    </form>
+  </div>
+  {% else %}
+  <p>No API key found for your account.</p>
+  {% endif %}
+</body>
+</html>
