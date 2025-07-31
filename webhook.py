@@ -1,55 +1,47 @@
-from fastapi import APIRouter, Request, HTTPException
+from fastapi import APIRouter, Request, Header, HTTPException
 import stripe
+import uuid
 import os
-from database import api_keys
 
 router = APIRouter()
-stripe.api_key = os.getenv("STRIPE_SECRET_KEY")
-endpoint_secret = os.getenv("STRIPE_WEBHOOK_SECRET")
+
+# Stripe API key setup
+stripe.api_key = os.getenv("STRIPE_SECRET_KEY", "sk_test_123")
+endpoint_secret = os.getenv("STRIPE_WEBHOOK_SECRET", "whsec_test_123")
+
+# Shared state for demo (use database in production)
+from main import API_KEYS
 
 @router.post("/webhook")
-async def stripe_webhook(request: Request):
+async def stripe_webhook(request: Request, stripe_signature: str = Header(None)):
     payload = await request.body()
-    sig_header = request.headers.get("stripe-signature")
 
     try:
         event = stripe.Webhook.construct_event(
-            payload=payload,
-            sig_header=sig_header,
-            secret=endpoint_secret
+            payload, stripe_signature, endpoint_secret
         )
-    except ValueError as e:
-        print("Invalid payload")
+    except ValueError:
         raise HTTPException(status_code=400, detail="Invalid payload")
-    except stripe.error.SignatureVerificationError as e:
-        print("Invalid signature")
+    except stripe.error.SignatureVerificationError:
         raise HTTPException(status_code=400, detail="Invalid signature")
 
-    # Handle event types
-    if event['type'] == 'checkout.session.completed':
-        session = event['data']['object']
-        session_id = session['id']
-        customer_id = session['customer']
-        subscription_id = session['subscription']
+    # Handle successful checkout
+    if event["type"] == "checkout.session.completed":
+        session = event["data"]["object"]
+        customer_id = session.get("customer")
+        email = session.get("customer_email")
 
-        # Assign session to an API key
-        for key, data in api_keys.items():
-            if data.get("stripe_session") == session_id:
-                api_keys[key].update({
-                    "customer_id": customer_id,
-                    "subscription_id": subscription_id,
-                    "stripe_session": None
-                })
-                print(f"Activated API key {key} for customer {customer_id}")
-                break
+        # Determine quota from plan (assume metadata or price lookup if needed)
+        plan_quota = 100  # Default
 
-    elif event['type'] == 'customer.subscription.deleted':
-        customer_id = event['data']['object']['customer']
-        # Disable API keys for this customer
-        for key, data in api_keys.items():
-            if data.get("customer_id") == customer_id:
-                data["quota"] = 0
-                print(f"Deactivated API key {key} for customer {customer_id}")
-                break
+        # Create and assign API key
+        new_key = str(uuid.uuid4())
+        API_KEYS[new_key] = {
+            "quota": plan_quota,
+            "used": 0,
+            "customer_id": customer_id
+        }
+
+        print(f"✅ New API key issued: {new_key} for customer {email} ({customer_id})")
 
     return {"status": "success"}
