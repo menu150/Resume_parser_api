@@ -1,83 +1,52 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>ResumeParse API Dashboard</title>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-    <script>
-        setTimeout(() => location.reload(), 10000);
-    </script>
+  <meta charset="UTF-8">
+  <title>ResumeParse Dashboard</title>
+  <style>
+    body { font-family: sans-serif; margin: 2rem; }
+    table { border-collapse: collapse; width: 100%; margin-top: 1rem; }
+    th, td { border: 1px solid #ccc; padding: 0.5rem; text-align: left; }
+    th { background: #eee; }
+    .actions { margin-top: 2rem; }
+  </style>
 </head>
-<body class="bg-gray-100 p-8 font-sans">
-    <div class="max-w-5xl mx-auto bg-white shadow rounded-lg p-6">
-        <h1 class="text-3xl font-bold mb-6 text-center">🔐 ResumeParse API Dashboard</h1>
+<body>
+  <h1>ResumeParse Admin Dashboard</h1>
+  <p><a href="/logout">Logout</a></p>
 
-        <table class="w-full table-auto border-collapse mb-10">
-            <thead>
-                <tr class="bg-gray-200 text-left">
-                    <th class="px-4 py-2">API Key</th>
-                    <th class="px-4 py-2">Used</th>
-                    <th class="px-4 py-2">Quota</th>
-                    <th class="px-4 py-2">Usage</th>
-                    <th class="px-4 py-2">Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for key, data in api_keys.items() %}
-                <tr class="border-b">
-                    <td class="px-4 py-2 font-mono text-sm">{{ key }}</td>
-                    <td class="px-4 py-2">{{ data.used }}</td>
-                    <td class="px-4 py-2">{{ data.quota }}</td>
-                    <td class="px-4 py-2 w-1/3">
-                        <div class="w-full bg-gray-300 rounded-full h-4">
-                            <div class="h-4 rounded-full 
-                                {% if data.used / data.quota > 0.9 %}
-                                    bg-red-500
-                                {% elif data.used / data.quota > 0.6 %}
-                                    bg-yellow-400
-                                {% else %}
-                                    bg-green-500
-                                {% endif %}"
-                                style="width: {{ (data.used / data.quota * 100) | round(0) }}%;">
-                            </div>
-                        </div>
-                        <p class="text-xs text-gray-600 mt-1">{{ (data.used / data.quota * 100) | round(0) }}%</p>
-                    </td>
-                    <td class="px-4 py-2">
-                        <form action="/reset_quota" method="post" class="inline-block mr-2">
-                            <input type="hidden" name="key" value="{{ key }}">
-                            <button class="bg-blue-500 text-white px-3 py-1 rounded text-sm">Reset</button>
-                        </form>
-                        <form action="/regenerate_key" method="post" class="inline-block">
-                            <input type="hidden" name="old_key" value="{{ key }}">
-                            <button class="bg-yellow-500 text-white px-3 py-1 rounded text-sm">Regenerate</button>
-                        </form>
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+  <div class="actions">
+    <h2>Subscribe to a Plan</h2>
+    <form action="/create_checkout_session" method="post">
+      <button type="submit" name="plan" value="basic">Subscribe to Basic ($10/mo)</button>
+      <button type="submit" name="plan" value="pro">Subscribe to Pro ($25/mo)</button>
+    </form>
+  </div>
 
-        <h2 class="text-2xl font-bold mb-4 mt-10">📄 Upload History</h2>
-        <table class="w-full table-auto border-collapse">
-            <thead>
-                <tr class="bg-gray-200 text-left">
-                    <th class="px-4 py-2">API Key</th>
-                    <th class="px-4 py-2">Filename</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for log in upload_log %}
-                <tr class="border-b">
-                    <td class="px-4 py-2 font-mono text-sm">{{ log.key }}</td>
-                    <td class="px-4 py-2">{{ log.filename }}</td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-
-        <p class="text-sm text-gray-500 text-center mt-6">⏱ Auto-refreshes every 10 seconds</p>
-    </div>
+  <div class="keys">
+    <h2>Issued API Keys</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Key</th>
+          <th>Email</th>
+          <th>Quota</th>
+          <th>Used</th>
+          <th>Customer ID</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for key in keys %}
+        <tr>
+          <td>{{ key["key"] }}</td>
+          <td>{{ key["email"] }}</td>
+          <td>{{ key["quota"] }}</td>
+          <td>{{ key["used"] }}</td>
+          <td>{{ key["customer_id"] }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
 </body>
 </html>
