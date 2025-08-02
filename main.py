@@ -7,22 +7,24 @@ import uuid
 import os
 import sqlite3
 from parser import extract_text_from_pdf, parse_resume_text
+from tasks import check_quota_alerts
 
-# FastAPI setup
+# === FastAPI Setup ===
 app = FastAPI()
 app.add_middleware(SessionMiddleware, secret_key="SUPERSECRET123")
 templates = Jinja2Templates(directory="templates")
 
-# Stripe config
+# === Stripe Configuration ===
 stripe.api_key = os.getenv("STRIPE_SECRET_KEY")
 PRICE_IDS = {
     "basic": os.getenv("STRIPE_PRICE_BASIC"),
     "pro": os.getenv("STRIPE_PRICE_PRO")
 }
 
+# === Database Path ===
 DB_PATH = os.getenv("API_KEY_DB", "api_keys.db")
 
-# Initialize DB
+# === Initialize Database ===
 def init_db():
     with sqlite3.connect(DB_PATH) as conn:
         conn.execute('''
@@ -31,73 +33,62 @@ def init_db():
                 quota INTEGER,
                 used INTEGER DEFAULT 0,
                 customer_id TEXT,
-                email TEXT
+                email TEXT,
+                quota_notified INTEGER DEFAULT 0
             )
         ''')
-
 init_db()
 
-# Home
-@app.get("/", response_class=HTMLResponse)
-async def home(request: Request):
-    return templates.TemplateResponse("index.html", {"request": request})
+# === Root Redirect to Next.js Frontend ===
+@app.get("/")
+async def root():
+    return RedirectResponse("http://localhost:3000/")
 
-# Checkout
+# === Checkout Session Creation ===
 @app.post("/create_checkout_session")
 async def create_checkout_session(plan: str = Form(...)):
     if plan not in PRICE_IDS:
         return JSONResponse({"error": "Invalid plan"}, status_code=400)
-
     session = stripe.checkout.Session.create(
-        success_url="http://localhost:8000/success",
-        cancel_url="http://localhost:8000/cancel",
+        success_url="/success",
+        cancel_url="/cancel",
         payment_method_types=["card"],
         mode="subscription",
-        line_items=[{
-            "price": PRICE_IDS[plan],
-            "quantity": 1
-        }],
+        line_items=[{"price": PRICE_IDS[plan], "quantity": 1}],
         metadata={"plan": plan}
     )
     return RedirectResponse(session.url, status_code=303)
 
-# Customer portal session
+# === Customer Portal Session ===
 @app.post("/create_customer_portal_session")
 async def create_customer_portal_session(email: str = Form(...)):
     with sqlite3.connect(DB_PATH) as conn:
         cursor = conn.cursor()
         cursor.execute("SELECT customer_id FROM api_keys WHERE email = ? LIMIT 1", (email,))
         row = cursor.fetchone()
-
     if not row:
         return JSONResponse({"error": "Customer not found"}, status_code=404)
-
     try:
         portal_session = stripe.billing_portal.Session.create(
             customer=row[0],
-            return_url="http://localhost:8000/dashboard"
+            return_url="/dashboard"
         )
         return RedirectResponse(portal_session.url, status_code=303)
     except Exception as e:
         return JSONResponse({"error": str(e)}, status_code=500)
 
-# Dashboard
+# === Admin Dashboard ===
 @app.get("/dashboard", response_class=HTMLResponse)
 async def dashboard(request: Request):
     if not request.session.get("logged_in"):
         return RedirectResponse("/login")
-
     conn = sqlite3.connect(DB_PATH)
     conn.row_factory = sqlite3.Row
     keys = conn.execute("SELECT * FROM api_keys").fetchall()
     conn.close()
+    return templates.TemplateResponse("dashboard.html", {"request": request, "keys": keys})
 
-    return templates.TemplateResponse("dashboard.html", {
-        "request": request,
-        "keys": keys
-    })
-
-# Login
+# === Authentication Routes ===
 @app.get("/login", response_class=HTMLResponse)
 async def login_form(request: Request):
     return templates.TemplateResponse("login.html", {"request": request})
@@ -114,7 +105,7 @@ async def logout(request: Request):
     request.session.clear()
     return RedirectResponse("/login")
 
-# Success and Cancel Pages
+# === Success and Cancel Pages ===
 @app.get("/success", response_class=HTMLResponse)
 async def checkout_success(request: Request):
     return templates.TemplateResponse("success.html", {"request": request})
@@ -122,4 +113,3 @@ async def checkout_success(request: Request):
 @app.get("/cancel", response_class=HTMLResponse)
 async def checkout_cancel(request: Request):
     return templates.TemplateResponse("cancel.html", {"request": request})
-from tasks import check_quota_alerts
