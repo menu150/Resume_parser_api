@@ -1,23 +1,17 @@
+# render.yaml (place at /home/menu150/resume_parser_api/render.yaml)
+
 services:
   - type: web
-    name: resume-parse-api
-    runtime: python
-    buildCommand: "pip install -r requirements.txt"
-    startCommand: "uvicorn main:app --host 0.0.0.0 --port 10000"
+    name: resumeparse-frontend
+    env: node
+    region: oregon        # or pick your preferred region
+    plan: free            # change to ‘starter’/‘standard’ if you need more resources
+    branch: main          # or whichever branch you deploy from
+    rootDir: frontend     # important: tells Render where your Next.js app lives
+    buildCommand: |
+      npm install
+      npm run build
+    startCommand: npm run start -- -p $PORT
     envVars:
-      - key: STRIPE_SECRET_KEY
-        sync: false
-      - key: STRIPE_WEBHOOK_SECRET
-        sync: false
-      - key: SMTP_SENDER
-        sync: false
-      - key: SMTP_PASSWORD
-        sync: false
-      - key: SMTP_SERVER
-        sync: false
-      - key: SMTP_PORT
-        sync: false
-      - key: STRIPE_PRICE_BASIC
-        sync: false
-      - key: STRIPE_PRICE_PRO
-        sync: false
+      - key: NODE_ENV
+        value: production
