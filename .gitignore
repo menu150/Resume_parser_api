@@ -1,24 +1,38 @@
 # Python
 venv/
 __pycache__/
-*.py[cod]
-*.egg-info/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
 
-# Node / Next.js
+# Node
 node_modules/
+.npm/
 .next/
+.next-cache/
 out/
 dist/
-*.log
+build/
 
-# Env & local
+# Secrets / local
 .env
-.env.*.local
+*.env
 *.db
 *.sqlite
+*.sqlite3
 *.tar.gz
+.DS_Store
+
+# Logs & coverage
+*.log
+coverage/
+.coverage
+*.pid
 
 # OS/editor
-.DS_Store
+Thumbs.db
 .idea/
 .vscode/
+
+archive/frontend_old/
