@@ -1,7 +1,24 @@
-# Byte-compiled files
+# Python
+venv/
 __pycache__/
 *.py[cod]
+*.egg-info/
 
-# Virtual environments
-venv/
+# Node / Next.js
+node_modules/
+.next/
+out/
+dist/
+*.log
+
+# Env & local
 .env
+.env.*.local
+*.db
+*.sqlite
+*.tar.gz
+
+# OS/editor
+.DS_Store
+.idea/
+.vscode/
