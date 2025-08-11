@@ -191,4 +191,178 @@ def healthz():
 # -----------------------------
 # API: Resume Parsing (stub)
 # -----------------------------
-@app.post("/v1/parse/
+@app.post("/v1/parse/resume", response_model=ParseResponse)
+def parse_resume(payload: ParseRequest, x_api_key: str = Depends(require_api_key)):
+    """
+    This is a stub parser to validate the full quota→billing path.
+    Replace the body with your actual parsing pipeline.
+    Cost: 1 unit
+    """
+    with SessionLocal() as db:
+        user = authenticate_and_decrement(db, x_api_key, cost=1)
+
+    # Stub response
+    return ParseResponse(
+        name="Jane Doe",
+        email="jane.doe@example.com",
+        phone="+1 (555) 555-5555",
+        skills=["Python", "FastAPI", "NLP"],
+        raw_text="(stub) Parsed content from resume."
+    )
+
+# -----------------------------
+# API: Usage (for dashboard)
+# -----------------------------
+@app.get("/v1/usage", response_model=UsageOut)
+def get_usage(x_api_key: str = Depends(require_api_key)):
+    with SessionLocal() as db:
+        h = hash_api_key(x_api_key)
+        k = db.query(APIKey).filter(APIKey.key_hash == h, APIKey.active == True).one_or_none()
+        if not k:
+            raise HTTPException(status_code=401, detail="Invalid key")
+        mq = get_or_create_month_quota(db, k.user_id)
+        return UsageOut(period_start=mq.period_start, used=mq.used, limit=mq.limit)
+
+# -----------------------------
+# Ops: Rotate API key (dashboard button)
+# Guarded by ADMIN_TOKEN to keep it simple for now.
+# -----------------------------
+@app.post("/admin/api-keys/rotate")
+def rotate_key(body: RotateKeyIn, authorization: Optional[str] = Header(default=None)):
+    if not ADMIN_TOKEN or authorization != f"Bearer {ADMIN_TOKEN}":
+        raise HTTPException(status_code=403, detail="Forbidden")
+    with SessionLocal() as db:
+        user = get_or_create_user(db, body.email)
+        # Deactivate old keys
+        db.query(APIKey).filter(APIKey.user_id == user.id, APIKey.active == True).update({"active": False})
+        db.commit()
+        # Issue new
+        raw = issue_api_key(db, user.id)
+    return {"api_key": raw, "message": "Store this securely; it will not be shown again."}
+
+# -----------------------------
+# Billing: Create Checkout Session
+# Triggered from frontend dashboard (/pricing)
+# -----------------------------
+@app.post("/billing/create-checkout-session")
+def create_checkout_session(data: CheckoutIn):
+    if not stripe.api_key:
+        raise HTTPException(status_code=500, detail="Stripe not configured")
+
+    # Ensure user exists locally
+    with SessionLocal() as db:
+        user = get_or_create_user(db, data.email)
+
+    try:
+        # Create (or reuse) customer
+        if not user.stripe_customer_id:
+            customer = stripe.Customer.create(email=data.email)
+            with SessionLocal() as db:
+                u = db.query(User).filter(User.id == user.id).first()
+                u.stripe_customer_id = customer.id
+                db.commit()
+            customer_id = customer.id
+        else:
+            customer_id = user.stripe_customer_id
+
+        session = stripe.checkout.Session.create(
+            mode="subscription",
+            customer=customer_id,
+            line_items=[{"price": data.price_id, "quantity": 1}],
+            success_url=data.success_url,
+            cancel_url=data.cancel_url,
+            allow_promotion_codes=True
+        )
+        return {"checkout_url": session.url}
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+# -----------------------------
+# Stripe Webhook
+# - checkout.session.completed
+# - customer.subscription.created/updated/deleted
+# - invoice.payment_succeeded (quota refill safety)
+# -----------------------------
+@app.post("/stripe/webhook")
+async def stripe_webhook(request: Request):
+    if not STRIPE_WEBHOOK_SECRET:
+        raise HTTPException(status_code=500, detail="Webhook not configured")
+
+    payload = await request.body()
+    sig_header = request.headers.get("stripe-signature")
+    try:
+        event = stripe.Webhook.construct_event(
+            payload=payload, sig_header=sig_header, secret=STRIPE_WEBHOOK_SECRET
+        )
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Webhook error: {e}")
+
+    evt_type = event["type"]
+
+    def set_quota_from_price(db, user_id: int, price_id: Optional[str]):
+        if not price_id:
+            return
+        limit = PLAN_QUOTAS.get(price_id, 0)
+        get_or_create_month_quota(db, user_id, desired_limit=limit)
+
+    if evt_type == "checkout.session.completed":
+        session_obj = event["data"]["object"]
+        customer_id = session_obj.get("customer")
+        email = session_obj.get("customer_details", {}).get("email")
+        price_id = None
+        if session_obj.get("mode") == "subscription":
+            # Get the subscription to read the price
+            sub_id = session_obj.get("subscription")
+            if sub_id:
+                sub = stripe.Subscription.retrieve(sub_id)
+                if sub["items"]["data"]:
+                    price_id = sub["items"]["data"][0]["price"]["id"]
+
+        with SessionLocal() as db:
+            user = get_or_create_user(db, email, stripe_customer_id=customer_id)
+            # Provision API key if none exists
+            has_key = db.query(APIKey).filter(APIKey.user_id == user.id, APIKey.active == True).count() > 0
+            if not has_key:
+                _ = issue_api_key(db, user.id)
+            # Set/Update monthly quota
+            set_quota_from_price(db, user.id, price_id)
+
+    elif evt_type in ("customer.subscription.created", "customer.subscription.updated"):
+        sub = event["data"]["object"]
+        customer_id = sub.get("customer")
+        price_id = None
+        if sub["items"]["data"]:
+            price_id = sub["items"]["data"][0]["price"]["id"]
+
+        with SessionLocal() as db:
+            user = db.query(User).filter(User.stripe_customer_id == customer_id).one_or_none()
+            if user:
+                set_quota_from_price(db, user.id, price_id)
+
+    elif evt_type == "customer.subscription.deleted":
+        # Zero out limit but keep usage for record
+        sub = event["data"]["object"]
+        customer_id = sub.get("customer")
+        with SessionLocal() as db:
+            user = db.query(User).filter(User.stripe_customer_id == customer_id).one_or_none()
+            if user:
+                mq = get_or_create_month_quota(db, user.id)
+                mq.limit = 0
+                db.commit()
+
+    elif evt_type == "invoice.payment_succeeded":
+        # Safety: when Stripe rolls into new period, ensure our current month limit matches plan
+        invoice = event["data"]["object"]
+        customer_id = invoice.get("customer")
+        lines = invoice.get("lines", {}).get("data", [])
+        price_id = None
+        if lines:
+            price = lines[0].get("price")
+            if price:
+                price_id = price.get("id")
+        with SessionLocal() as db:
+            user = db.query(User).filter(User.stripe_customer_id == customer_id).one_or_none()
+            if user:
+                set_quota_from_price(db, user.id, price_id)
+
+    return {"received": True}
