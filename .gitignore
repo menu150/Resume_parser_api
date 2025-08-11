@@ -36,3 +36,9 @@ Thumbs.db
 .vscode/
 
 archive/frontend_old/
+
+# Ignore
+venv/
+.env
+api_keys.db
+stripe.tar.gz
