@@ -42,3 +42,11 @@ venv/
 .env
 api_keys.db
 stripe.tar.gz
+
+# Ignore local artifacts
+venv/
+node_modules/
+.env
+api_keys.db
+stripe.tar.gz
+__pycache__/
