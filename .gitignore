@@ -58,3 +58,12 @@ node_modules/
 api_keys.db
 stripe.tar.gz
 __pycache__/
+
+# Ignore local artifacts
+.venv/
+venv/
+__pycache__/
+node_modules/
+.env
+*.sqlite3
+*.db
